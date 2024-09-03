@@ -10,13 +10,14 @@ html {
 
 .chat-bubble {
   /* word-spacing: 0.5rem; */
-  padding: 0px 15px;
+  /* padding: 0px 0px; */
   border-radius: 20px;
   max-width: 75%;
   margin-bottom: 20px;
 }
 
 .chat-bubble-user {
+  padding: 0 15px;
   color: white;
   align-self: flex-end;
 }
@@ -46,6 +47,14 @@ Sample CSS styles styles.css .chat-bubble {
   line-height: 2;
   color: #ffffffb9;
 }
+
+@media screen and (max-width: 768px) {
+  /* Gaya untuk layar dengan lebar minimum 600px */
+  .markdown {
+    font-size: 14px;
+  }
+}
+
 .markdown h1,
 .markdown h2,
 .markdown h3 {
@@ -100,7 +109,7 @@ Sample CSS styles styles.css .chat-bubble {
 
 .mdsend:hover {
   color: #b9008b;
-  transform: scale(1.5);
+  /* transform: scale(1.5); */
   transition: ease-in 300ms;
 }
 

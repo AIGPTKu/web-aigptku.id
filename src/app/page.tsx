@@ -51,7 +51,7 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
                 <SyntaxHighlighter
                   customStyle={{
                     margin: 0,
-                    fontSize: innerWidth < 768 ? 10 : 12,
+                    fontSize: innerWidth < 768 ? 10 : 14,
                   }}
                   style={nightOwl}
                   language={match[1]}
@@ -106,6 +106,7 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      borderRadius: "10px 10px 0 0",
                     }}
                   >
                     <span style={{ fontSize: 10 }}>{match[1]}</span>
@@ -116,7 +117,8 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                   <SyntaxHighlighter
                     customStyle={{
                       margin: 0,
-                      fontSize: innerWidth < 768 ? 10 : 12,
+                      fontSize: innerWidth < 768 ? 10 : 14,
+                      borderRadius: "0px 0px 20px 20px",
                     }}
                     style={nightOwl}
                     language={match[1]}
@@ -363,6 +365,8 @@ const HomePage: React.FC = React.memo(() => {
         setMessages(messages.push(rendered));
       }, 300);
       return () => clearTimeout(wait);
+    } else if (inRenderedMessage.size > 0) {
+      window.scrollTo(0, document.body.scrollHeight);
     }
   }, [inRenderedMessage, isFinishRenderMessage]);
 
@@ -408,7 +412,7 @@ const HomePage: React.FC = React.memo(() => {
         <div
           className="space-y-4"
           style={{
-            width: innerWidth < 768 ? "95vw" : "80vw",
+            width: innerWidth < 768 ? "98vw" : "80vw",
             maxWidth: "800px",
             minHeight: "100vh",
             display: "flex",
