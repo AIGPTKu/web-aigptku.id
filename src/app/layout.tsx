@@ -5,11 +5,26 @@ import { GlobalProvider } from "@/context/global";
 
 // const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "AIGPTku",
-  description: "Assisten kerja kamu!",
-  icons: "/aigptku.id-logo-min.png",
-};
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  try {
+    return {
+      title: "AIGPTku",
+      description: "Assisten kerja kamu!",
+      icons: "/aigptku.id-logo-min.png",
+      openGraph: {
+        title: "AIGPTku",
+        description: "Assisten kerja kamu!",
+        images: "/aigptku.id-logo-min.png",
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Family Decorative",
+      description: "",
+      icons: "https://www.familydecorative.com/logo.png",
+    };
+  }
+}
 
 export default function RootLayout({
   children,

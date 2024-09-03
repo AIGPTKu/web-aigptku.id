@@ -5,14 +5,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css"; // Import a highlight.js theme
-import { MdSend } from "react-icons/md";
+import { MdOutlineContentCopy, MdSend } from "react-icons/md";
 import { Map, List } from "immutable";
 import { useGlobalContext } from "@/context/global";
-
-type Message = {
-  text: string;
-  isUser: boolean;
-};
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
+import ReactDOMServer from "react-dom/server";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
+import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   return (
@@ -22,10 +23,29 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
       }`}
     >
       <ReactMarkdown
+        components={{
+          code({ node, className, children }) {
+            const match = /language-(\w+)/.exec(className || "");
+            return match ? (
+              <SyntaxHighlighter
+                style={nightOwl}
+                language={match[1]}
+                PreTag="div"
+                children={String(children).replace(/\n$/, "")}
+              />
+            ) : (
+              <code
+                className={className}
+                style={{ backgroundColor: "#1e1e1e" }}
+                children={children}
+              />
+            );
+          },
+        }}
         className="markdown"
         children={message.get("text") as string}
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
       ></ReactMarkdown>
     </div>
   );
@@ -42,15 +62,81 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
         }`}
       >
         <ReactMarkdown
+          components={{
+            code({ node, className, children }) {
+              const match = /language-(\w+)/.exec(className || "");
+              return match ? (
+                <div
+                  style={{
+                    position: "relative",
+                  }}
+                >
+                  <ButtonCopy content={String(children).replace(/\n$/, "")} />
+                  <SyntaxHighlighter
+                    style={nightOwl}
+                    language={match[1]}
+                    PreTag="div"
+                    children={String(children).replace(/\n$/, "")}
+                    // {...props}
+                  />
+                </div>
+              ) : (
+                <code
+                  className={className}
+                  style={{ backgroundColor: "#1e1e1e" }}
+                  children={children}
+                />
+              );
+            },
+          }}
           className="markdown"
           children={message.get("text") as string}
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeHighlight]}
+          remarkPlugins={[remarkMath]}
+          rehypePlugins={[rehypeKatex]}
         />
       </div>
     );
   }
 );
+
+const ButtonCopy = ({ content }: { content: string }) => {
+  const [showText, setShowText] = useState(false);
+  useEffect(() => {
+    if (showText) {
+      const timeout = setTimeout(() => setShowText(false), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [showText]);
+
+  return (
+    <div
+      style={{
+        paddingTop: 20,
+        paddingRight: 20,
+        right: 0,
+        position: "absolute",
+        top: 0,
+        zIndex: 1,
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      {showText && (
+        <span style={{ fontSize: 10, marginRight: 5 }}>Teks Disalin!</span>
+      )}
+      <button
+        onClick={(e) => {
+          e.currentTarget.style.opacity = "0.5";
+          setShowText(true);
+          navigator.clipboard.writeText(content);
+        }}
+        className="btncopy"
+      >
+        <MdOutlineContentCopy size={20} color="white" />
+      </button>
+    </div>
+  );
+};
 
 const HomePage: React.FC = React.memo(() => {
   const { innerWidth } = useGlobalContext();
@@ -139,6 +225,10 @@ const HomePage: React.FC = React.memo(() => {
 
               let data = JSON.parse(line.trim());
               newMessages.text += data.content;
+              newMessages.text = newMessages.text.replaceAll(
+                /\\\(|\\\)|\\\[|\\\]/g,
+                "$$$"
+              );
               setInRenderedMessage(
                 List([
                   Map({
@@ -165,7 +255,7 @@ const HomePage: React.FC = React.memo(() => {
 
   useEffect(() => {
     const message = Map({
-      text: "Halo! apa yang bisa kubantu?",
+      text: "Halo! Ada yang bisa saya bantu?",
       isUser: false,
     });
 
