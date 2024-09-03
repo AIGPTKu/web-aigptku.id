@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-family: "Libre Baskervville", sans-serif;
+  font-weight: 300;
+}
+
+.chat-bubble {
+  /* word-spacing: 0.5rem; */
+  padding: 0px 15px;
+  border-radius: 20px;
+  max-width: 75%;
+  margin-bottom: 20px;
+}
+
+.chat-bubble-user {
+  color: white;
+  align-self: flex-end;
+}
+
+.chat-bubble-bot {
+  color: white;
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+Sample CSS styles styles.css .chat-bubble {
+  padding: 10px;
+  border-radius: 5px;
+  margin: 5px;
+  max-width: 80%;
+}
+.chat-bubble-user {
+  background-color: #9c0097; /* User message color */
+  align-self: flex-end;
+}
+.chat-bubble-bot {
+  /* background-color: #9a0f98; */
+}
+
+.markdown {
+  font-size: 16px;
+  line-height: 2;
+  color: #ffffffb9;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  color: #ffffffde;
+  margin-top: 10px;
+}
+
+.markdown strong {
+  font-weight: 700;
+  color: #ffffffde;
+}
+
+.markdown p {
+  margin: 5px 0;
+}
+.markdown ul {
+  padding-left: 20px;
+}
+
+.markdown ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+}
+.markdown code {
+  color: #39065a;
+  background-color: #ffe8d9;
+  padding: 2px 5px;
+  line-height: 1.5rem;
+  font-size: 14px;
+  border-radius: 3px;
+}
+.markdown blockquote {
+  border-left: 3px solid #ccc;
+  padding-left: 10px;
+  color: #555;
+}
+
+.navbar {
+  transition: ease-out 300ms;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2); /* 0px 5px 10px = offset, blur, spread */
+}
+
+.navbar:hover {
+  transition: ease-in 300ms;
+}
+
+.mdsend {
+  color: #39065a;
+  transition: ease-out 300ms;
+}
+
+.mdsend:hover {
+  color: #b9008b;
+  transform: scale(1.5);
+  transition: ease-in 300ms;
+}
+
+input {
+  background-color: #ffd7f0;
+  color: #39065a;
+  transition: ease-out 300ms;
+  border: solid 1px #39065a;
+  outline: none;
+}
+
+input:hover,
+:focus {
+  transition: ease-in 300ms;
+}
+
+input::-webkit-input-placeholder {
+  color: #39065a;
+}
+
+input::-moz-placeholder {
+  color: #39065a;
+}
+
+input::-ms-input-placeholder {
+  color: #39065a;
+}
+
+input::-webkit-input-placeholder {
+  color: #39065a;
+}
+
+input:-moz-placeholder {
+  color: #39065a;
+}
+
+input::placeholder {
+  color: #38065a85;
+}
