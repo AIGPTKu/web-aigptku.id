@@ -7,6 +7,7 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css"; // Import a highlight.js theme
 import { MdSend } from "react-icons/md";
 import { Map, List } from "immutable";
+import { useGlobalContext } from "@/context/global";
 
 type Message = {
   text: string;
@@ -52,6 +53,7 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
 );
 
 const HomePage: React.FC = React.memo(() => {
+  const { innerWidth } = useGlobalContext();
   const [messages, setMessages] = useState<List<Map<string, any>>>(List([]));
 
   const [inRenderedMessage, setInRenderedMessage] = useState<
@@ -224,7 +226,7 @@ const HomePage: React.FC = React.memo(() => {
         <div
           className="space-y-4"
           style={{
-            width: window.innerWidth < 768 ? "95vw" : "80vw",
+            width: innerWidth < 768 ? "95vw" : "80vw",
             maxWidth: "800px",
             minHeight: "100vh",
             display: "flex",
@@ -256,8 +258,8 @@ const HomePage: React.FC = React.memo(() => {
             style={{
               height: "100%",
               width: "100%",
-              paddingLeft: window.innerWidth < 768 ? "4%" : "2%",
-              paddingRight: window.innerWidth < 768 ? "15%" : "8%",
+              paddingLeft: innerWidth < 768 ? "4%" : "2%",
+              paddingRight: innerWidth < 768 ? "15%" : "8%",
               borderRadius: 20,
             }}
             type="text"
@@ -268,7 +270,7 @@ const HomePage: React.FC = React.memo(() => {
           />
           <button
             style={{
-              right: window.innerWidth < 768 ? "7%" : 10,
+              right: innerWidth < 768 ? "7%" : 10,
               position: "absolute",
               height: "100%",
               width: "5%",
