@@ -14,6 +14,7 @@ import ReactDOMServer from "react-dom/server";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
+import { FaCheck } from "react-icons/fa6";
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   return (
@@ -27,12 +28,38 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
           code({ node, className, children }) {
             const match = /language-(\w+)/.exec(className || "");
             return match ? (
-              <SyntaxHighlighter
-                style={nightOwl}
-                language={match[1]}
-                PreTag="div"
-                children={String(children).replace(/\n$/, "")}
-              />
+              <div
+                style={{
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    height: 25,
+                    padding: "0px 10px",
+                    backgroundColor: "#1e1e1e",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span style={{ fontSize: 10 }}>{match[1]}</span>
+                  <ButtonCopyCode
+                    content={String(children).replace(/\n$/, "")}
+                  />
+                </div>
+                <SyntaxHighlighter
+                  customStyle={{
+                    margin: 0,
+                    fontSize: innerWidth < 768 ? 10 : 12,
+                  }}
+                  style={nightOwl}
+                  language={match[1]}
+                  PreTag="div"
+                  children={String(children).replace(/\n$/, "")}
+                  // {...props}
+                />
+              </div>
             ) : (
               <code
                 className={className}
@@ -71,8 +98,26 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                     position: "relative",
                   }}
                 >
-                  <ButtonCopy content={String(children).replace(/\n$/, "")} />
+                  <div
+                    style={{
+                      height: 25,
+                      padding: "0px 10px",
+                      backgroundColor: "#1e1e1e",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span style={{ fontSize: 10 }}>{match[1]}</span>
+                    <ButtonCopyCode
+                      content={String(children).replace(/\n$/, "")}
+                    />
+                  </div>
                   <SyntaxHighlighter
+                    customStyle={{
+                      margin: 0,
+                      fontSize: innerWidth < 768 ? 10 : 12,
+                    }}
                     style={nightOwl}
                     language={match[1]}
                     PreTag="div"
@@ -94,47 +139,94 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
           remarkPlugins={[remarkMath]}
           rehypePlugins={[rehypeKatex]}
         />
+        {!(message.get("isUser") as boolean) && (
+          <ButtonCopy content={message.get("text")} />
+        )}
       </div>
     );
   }
 );
 
 const ButtonCopy = ({ content }: { content: string }) => {
-  const [showText, setShowText] = useState(false);
+  const [copied, setCopied] = useState(false);
   useEffect(() => {
-    if (showText) {
-      const timeout = setTimeout(() => setShowText(false), 3000);
+    if (copied) {
+      const timeout = setTimeout(() => setCopied(false), 3000);
       return () => clearTimeout(timeout);
     }
-  }, [showText]);
+  }, [copied]);
 
   return (
-    <div
+    <button
       style={{
-        paddingTop: 20,
-        paddingRight: 20,
-        right: 0,
-        position: "absolute",
-        top: 0,
-        zIndex: 1,
+        margin: "10px 0",
         display: "flex",
         alignItems: "center",
       }}
+      onClick={(e) => {
+        e.currentTarget.style.opacity = "0.5";
+        setCopied(true);
+        navigator.clipboard.writeText(content);
+      }}
+      className="btncopy"
     >
-      {showText && (
-        <span style={{ fontSize: 10, marginRight: 5 }}>Teks Disalin!</span>
+      {copied ? (
+        <FaCheck size={15} color="white" />
+      ) : (
+        <MdOutlineContentCopy size={15} color="white" />
       )}
-      <button
-        onClick={(e) => {
-          e.currentTarget.style.opacity = "0.5";
-          setShowText(true);
-          navigator.clipboard.writeText(content);
+      <span
+        style={{
+          marginLeft: 5,
+          fontSize: 12,
+          verticalAlign: "center",
+          textAlign: "center",
         }}
-        className="btncopy"
       >
-        <MdOutlineContentCopy size={20} color="white" />
-      </button>
-    </div>
+        {copied ? "Disalin" : "Salin Teks"}
+      </span>
+    </button>
+  );
+};
+
+const ButtonCopyCode = ({ content }: { content: string }) => {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (copied) {
+      const timeout = setTimeout(() => setCopied(false), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [copied]);
+
+  return (
+    <button
+      style={{
+        display: "flex",
+        alignItems: "center",
+      }}
+      onClick={(e) => {
+        e.currentTarget.style.opacity = "0.5";
+        setCopied(true);
+        navigator.clipboard.writeText(content);
+      }}
+      className="btncopy"
+    >
+      {copied ? (
+        <FaCheck size={13} color="white" />
+      ) : (
+        <MdOutlineContentCopy size={13} color="white" />
+      )}
+      <span
+        style={{
+          marginLeft: 5,
+          fontSize: 10,
+          verticalAlign: "center",
+          textAlign: "center",
+        }}
+      >
+        {copied ? "Disalin" : "Salin Kode"}
+      </span>
+    </button>
   );
 };
 
