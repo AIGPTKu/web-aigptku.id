@@ -224,7 +224,7 @@ const HomePage: React.FC = React.memo(() => {
         <div
           className="space-y-4"
           style={{
-            width: "80vw",
+            width: window.innerWidth < 768 ? "95vw" : "80vw",
             maxWidth: "800px",
             minHeight: "100vh",
             display: "flex",
@@ -247,7 +247,8 @@ const HomePage: React.FC = React.memo(() => {
             flexDirection: "row",
             position: "fixed",
             bottom: 20,
-            width: "50%",
+            width: "80%",
+            maxWidth: "800px",
             justifyContent: "center",
           }}
         >
@@ -255,19 +256,19 @@ const HomePage: React.FC = React.memo(() => {
             style={{
               height: "100%",
               width: "100%",
-              paddingLeft: "2%",
-              paddingRight: "8%",
+              paddingLeft: window.innerWidth < 768 ? "4%" : "2%",
+              paddingRight: window.innerWidth < 768 ? "15%" : "8%",
               borderRadius: 20,
             }}
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Type your message..."
+            placeholder="Tekan Enter untuk mengirim..."
           />
           <button
             style={{
-              right: 10,
+              right: window.innerWidth < 768 ? "7%" : 10,
               position: "absolute",
               height: "100%",
               width: "5%",
