@@ -103,7 +103,7 @@ Sample CSS styles styles.css .chat-bubble {
 }
 
 .mdsend {
-  color: #39065a;
+  color: #ffffff;
   transition: ease-out 300ms;
 }
 
@@ -114,8 +114,13 @@ Sample CSS styles styles.css .chat-bubble {
 }
 
 input {
-  background-color: #ffd7f0;
-  color: #39065a;
+  /* background-color: #ffd7f0; */
+  background-image: linear-gradient(
+    109.6deg,
+    rgba(228, 107, 232, 1) 11.2%,
+    rgba(87, 27, 226, 1) 96.7%
+  );
+  color: #ffffff;
   transition: ease-out 300ms;
   border: solid 1px #39065a;
   outline: none;
@@ -127,27 +132,27 @@ input:hover,
 }
 
 input::-webkit-input-placeholder {
-  color: #39065a;
+  color: #ffffffb2;
 }
 
 input::-moz-placeholder {
-  color: #39065a;
+  color: #ffffffb2;
 }
 
 input::-ms-input-placeholder {
-  color: #39065a;
+  color: #ffffffb2;
 }
 
 input::-webkit-input-placeholder {
-  color: #39065a;
+  color: #ffffffb2;
 }
 
 input:-moz-placeholder {
-  color: #39065a;
+  color: #ffffffb2;
 }
 
 input::placeholder {
-  color: #38065a85;
+  color: #ffffffb2;
 }
 
 .btncopy {

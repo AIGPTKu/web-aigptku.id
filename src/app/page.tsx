@@ -416,7 +416,8 @@ const HomePage: React.FC = React.memo(() => {
         <div
           className="navbar"
           style={{
-            backgroundColor: "#ffd7f0",
+            backgroundImage:
+              "linear-gradient( 109.6deg,  rgba(228,107,232,1) 11.2%, rgba(87,27,226,1) 96.7% )",
             position: "fixed",
             top: 0,
             width: "100%",
@@ -427,7 +428,7 @@ const HomePage: React.FC = React.memo(() => {
         >
           <img
             style={{ cursor: "pointer" }}
-            src="/aigptku.id-min.png"
+            src="/aigptku.id-white.png"
             alt=""
             width={150}
           />
