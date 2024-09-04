@@ -5,12 +5,7 @@
 html {
   font-family: "Libre Baskervville", sans-serif;
   font-weight: 300;
-  /* background-color: #ffd7f0; */
-  background-image: linear-gradient(
-    109.6deg,
-    rgba(228, 107, 232, 1) 11.2%,
-    rgba(87, 27, 226, 1) 96.7%
-  );
+  background-color: #10001b;
 }
 
 .chat-bubble {
