@@ -66,7 +66,11 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
             ) : (
               <code
                 className={className}
-                style={{ backgroundColor: "#1e1e1e" }}
+                style={{
+                  backgroundColor: "#1e1e1e",
+                  padding: "2px 5px",
+                  fontSize: innerWidth < 768 ? 12 : 14,
+                }}
                 children={children}
               />
             );
