@@ -2,21 +2,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css"; // Import a highlight.js theme
 import { MdOutlineContentCopy, MdSend } from "react-icons/md";
 import { Map, List } from "immutable";
 import { useGlobalContext } from "@/context/global";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
-import ReactDOMServer from "react-dom/server";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
 import { FaCheck } from "react-icons/fa6";
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
+  const { innerWidth } = useGlobalContext();
   return (
     <div
       className={`chat-bubble ${
@@ -31,6 +29,8 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
               <div
                 style={{
                   position: "relative",
+                  border: "1px solid #272727",
+                  borderRadius: 10,
                 }}
               >
                 <div
@@ -41,6 +41,7 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    borderRadius: "10px 10px 0 0",
                   }}
                 >
                   <span style={{ fontSize: 10 }}>{match[1]}</span>
@@ -52,6 +53,8 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
                   customStyle={{
                     margin: 0,
                     fontSize: innerWidth < 768 ? 10 : 14,
+                    borderRadius: "0px 0px 10px 10px",
+                    backgroundColor: "black",
                   }}
                   style={nightOwl}
                   language={match[1]}
@@ -73,13 +76,14 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
         children={message.get("text") as string}
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
-      ></ReactMarkdown>
+      />
     </div>
   );
 };
 
 const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
   ({ message }) => {
+    const { innerWidth } = useGlobalContext();
     return (
       <div
         className={`chat-bubble ${
@@ -96,6 +100,8 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                 <div
                   style={{
                     position: "relative",
+                    border: "1px solid #272727",
+                    borderRadius: 10,
                   }}
                 >
                   <div
@@ -118,7 +124,8 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                     customStyle={{
                       margin: 0,
                       fontSize: innerWidth < 768 ? 10 : 14,
-                      borderRadius: "0px 0px 20px 20px",
+                      borderRadius: "0px 0px 10px 10px",
+                      backgroundColor: "black",
                     }}
                     style={nightOwl}
                     language={match[1]}
@@ -130,7 +137,11 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
               ) : (
                 <code
                   className={className}
-                  style={{ backgroundColor: "#1e1e1e" }}
+                  style={{
+                    backgroundColor: "#1e1e1e",
+                    padding: "2px 5px",
+                    fontSize: innerWidth < 768 ? 12 : 14,
+                  }}
                   children={children}
                 />
               );
@@ -360,12 +371,16 @@ const HomePage: React.FC = React.memo(() => {
     if (isFinishRenderMessage && inRenderedMessage.size > 0) {
       const wait = setTimeout(() => {
         console.log("CHANGE");
+        // alert("height: " + window.innerHeight + screen.height);
         const rendered = inRenderedMessage.get(0) as Map<string, any>;
         setInRenderedMessage(List([]));
         setMessages(messages.push(rendered));
       }, 300);
       return () => clearTimeout(wait);
-    } else if (inRenderedMessage.size > 0) {
+    } else if (
+      inRenderedMessage.size > 0 &&
+      window.innerHeight >= screen.height - 200
+    ) {
       window.scrollTo(0, document.body.scrollHeight);
     }
   }, [inRenderedMessage, isFinishRenderMessage]);
@@ -387,7 +402,7 @@ const HomePage: React.FC = React.memo(() => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          backgroundColor: "#180028",
+          backgroundColor: "#10001b",
         }}
       >
         <div
@@ -430,41 +445,51 @@ const HomePage: React.FC = React.memo(() => {
         <form
           onSubmit={handleSubmit}
           style={{
-            height: 50,
-            display: "flex",
-            flexDirection: "row",
+            height: 70,
             position: "fixed",
-            bottom: 20,
-            width: "80%",
-            maxWidth: "800px",
+            bottom: 0,
+            width: "100vw",
+            display: "flex",
             justifyContent: "center",
+            backgroundColor: "#10001b",
+            boxShadow: "0 -10px 6px rgba(24, 0, 40, 0.5)",
           }}
         >
-          <input
+          <div
             style={{
-              height: "100%",
-              width: "100%",
-              paddingLeft: innerWidth < 768 ? "4%" : "2%",
-              paddingRight: innerWidth < 768 ? "15%" : "8%",
-              borderRadius: 20,
+              position: "relative",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              width: "80%",
+              maxWidth: "800px",
             }}
-            type="text"
-            value={inputValue}
-            onChange={handleInputChange}
-            className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Tekan Enter untuk mengirim..."
-          />
-          <button
-            style={{
-              right: innerWidth < 768 ? "7%" : 10,
-              position: "absolute",
-              height: "100%",
-              width: "5%",
-            }}
-            type="submit"
           >
-            <MdSend className="mdsend" size={30} />
-          </button>
+            <input
+              style={{
+                height: 50,
+                width: "100%",
+                paddingLeft: innerWidth < 768 ? "4%" : "2%",
+                paddingRight: innerWidth < 768 ? "15%" : "8%",
+                borderRadius: 20,
+              }}
+              type="text"
+              value={inputValue}
+              onChange={handleInputChange}
+              className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Tekan Enter untuk mengirim..."
+            />
+            <button
+              style={{
+                right: innerWidth < 768 ? "3%" : 10,
+                top: 10,
+                position: "absolute",
+              }}
+              type="submit"
+            >
+              <MdSend className="mdsend" size={30} />
+            </button>
+          </div>
         </form>
       </div>
     </div>

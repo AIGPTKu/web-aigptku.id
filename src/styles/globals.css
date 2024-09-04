@@ -81,7 +81,7 @@ Sample CSS styles styles.css .chat-bubble {
 .markdown code {
   color: #ffffffdd;
   /* background-color: #ffe8d9; */
-  padding: 2px 5px;
+  /* padding: 2px 5px; */
   line-height: 1.5rem;
   font-size: 14px;
   border-radius: 3px;
@@ -95,7 +95,7 @@ Sample CSS styles styles.css .chat-bubble {
 .navbar {
   z-index: 1;
   transition: ease-out 300ms;
-  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2); /* 0px 5px 10px = offset, blur, spread */
+  box-shadow: 0px 10px 6px rgba(24, 0, 40, 0.5); /* 0px 5px 10px = offset, blur, spread */
 }
 
 .navbar:hover {
