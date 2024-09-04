@@ -262,12 +262,8 @@ const HomePage: React.FC = React.memo(() => {
     e.preventDefault();
     if (inputValue.trim()) {
       try {
-        const input = inputValue.trim();
-        setMessages(messages.push(Map({ text: inputValue, isUser: true })));
-        setInputValue("");
-
-        const prevContent = [];
         const size = messages.size;
+        const prevContent = [];
 
         for (let i = size - 1; i >= 0; i--) {
           if (prevContent.length >= 9) {
@@ -276,17 +272,21 @@ const HomePage: React.FC = React.memo(() => {
 
           const isUser = messages.get(i)?.get("isUser") as boolean;
 
-          if (!isUser) {
+          if (!isUser && i < size - 1) {
             continue;
           }
 
           const text = messages.get(i)?.get("text") as string;
 
           prevContent.unshift({
-            role: "user",
+            role: isUser ? "user" : "assistant",
             content: text,
           });
         }
+
+        const input = inputValue.trim();
+        setMessages(messages.push(Map({ text: inputValue, isUser: true })));
+        setInputValue("");
 
         const res = await fetch(`https://api.aigptku.id/v1/generative`, {
           method: "POST",
