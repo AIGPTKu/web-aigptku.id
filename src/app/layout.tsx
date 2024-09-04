@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { GlobalProvider } from "@/context/global";
 
@@ -19,9 +18,9 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     };
   } catch (error) {
     return {
-      title: "Family Decorative",
-      description: "",
-      icons: "https://www.familydecorative.com/logo.png",
+      title: "AIGPTku",
+      description: "Assisten kerja kamu!",
+      icons: "/aigptku.id-logo-min.png",
     };
   }
 }

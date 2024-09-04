@@ -268,15 +268,23 @@ const HomePage: React.FC = React.memo(() => {
 
         const prevContent = [];
         const size = messages.size;
-        const start = size - 1;
 
-        for (let i = start; i < size; i++) {
-          const text = messages.get(i)?.get("text") as string;
+        for (let i = size - 1; i >= 0; i--) {
+          if (prevContent.length >= 9) {
+            break;
+          }
+
           const isUser = messages.get(i)?.get("isUser") as boolean;
 
-          prevContent.push({
+          if (!isUser) {
+            continue;
+          }
+
+          const text = messages.get(i)?.get("text") as string;
+
+          prevContent.unshift({
+            role: "user",
             content: text,
-            role: isUser ? "user" : "assistant",
           });
         }
 
