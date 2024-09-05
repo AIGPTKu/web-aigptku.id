@@ -9,18 +9,18 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     return {
       title: "AIGPTku",
       description: "Assisten kerja kamu!",
-      icons: "/aigptku.id-logo-min.png",
+      icons: "/aigptku.id-logo-min1.png",
       openGraph: {
         title: "AIGPTku",
         description: "Assisten kerja kamu!",
-        images: "/aigptku.id-logo-min.png",
+        images: "/aigptku.id-logo-min1.png",
       },
     };
   } catch (error) {
     return {
       title: "AIGPTku",
       description: "Assisten kerja kamu!",
-      icons: "/aigptku.id-logo-min.png",
+      icons: "/aigptku.id-logo-min1.png",
     };
   }
 }
