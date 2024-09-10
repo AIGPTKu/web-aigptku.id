@@ -701,7 +701,9 @@ const HomePage: React.FC = React.memo(() => {
                     e.style.transition = "ease-in-out 300ms";
 
                     setSidebarActive(true);
-                    document.body.style.overflow = "hidden";
+                    if (innerWidth < 768) {
+                      document.body.style.overflow = "hidden";
+                    }
 
                     setTimeout(() => {
                       e.style.transition = "";
