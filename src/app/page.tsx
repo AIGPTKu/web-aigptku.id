@@ -11,7 +11,17 @@ import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
-import { FaCheck } from "react-icons/fa6";
+import { FaBarsStaggered, FaCheck } from "react-icons/fa6";
+import Sidebar from "@/components/Sidebar";
+import { useSearchParams } from "next/navigation";
+import { PiSidebarFill } from "react-icons/pi";
+import { RiEditFill } from "react-icons/ri";
+import {
+  addToStore,
+  getAllFromStore,
+  getAllIndexedFromStore,
+  getFromStore,
+} from "@/components/db";
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   const { innerWidth } = useGlobalContext();
@@ -67,7 +77,7 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
               <code
                 className={className}
                 style={{
-                  backgroundColor: "#1e1e1e",
+                  backgroundColor: "#401b97",
                   padding: "2px 5px",
                   fontSize: innerWidth < 768 ? 12 : 14,
                 }}
@@ -142,7 +152,7 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                 <code
                   className={className}
                   style={{
-                    backgroundColor: "#1e1e1e",
+                    backgroundColor: "#401b97",
                     padding: "2px 5px",
                     fontSize: innerWidth < 768 ? 12 : 14,
                   }}
@@ -248,9 +258,24 @@ const ButtonCopyCode = ({ content }: { content: string }) => {
 };
 
 const HomePage: React.FC = React.memo(() => {
-  const { innerWidth } = useGlobalContext();
+  const searchParams = useSearchParams();
+  const {
+    innerWidth,
+    chats,
+    setChats,
+    rooms,
+    setRooms,
+    handleAddRoom,
+    contextLoading,
+  } = useGlobalContext();
   const [messages, setMessages] = useState<List<Map<string, any>>>(List([]));
-
+  const [sidebarWidth, setSidebarWidth] = useState(250);
+  const [sidebarActive, setSidebarActive] = useState(false);
+  const [isReadyToPushMessage, setIsReadyToPushMessage] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [showContent, setShowContent] = useState(false);
+  const [isRoomNameEmpty, setIsRoomNameEmpty] = useState(false);
+  console.log("sidebar", sidebarActive);
   const [inRenderedMessage, setInRenderedMessage] = useState<
     List<Map<string, any>>
   >(List([]));
@@ -288,9 +313,22 @@ const HomePage: React.FC = React.memo(() => {
           });
         }
 
+        const roomId = searchParams.get("room") as string;
+
         const input = inputValue.trim();
-        setMessages(messages.push(Map({ text: inputValue, isUser: true })));
+        const newMessage = Map({
+          text: inputValue,
+          isUser: true,
+          room_id: roomId,
+        });
+        setMessages(messages.push(newMessage));
         setInputValue("");
+
+        addToStore("chats", Object.fromEntries(newMessage.entries()));
+
+        if (isRoomNameEmpty) {
+          handleSetAutoRoomName(input);
+        }
 
         const res = await fetch(`https://api.aigptku.id/v1/generative`, {
           method: "POST",
@@ -370,23 +408,85 @@ const HomePage: React.FC = React.memo(() => {
     }
   };
 
-  useEffect(() => {
-    const message = Map({
-      text: "Halo! Ada yang bisa saya bantu?",
-      isUser: false,
-    });
+  const handleSaveScroll = () => {
+    const roomId = searchParams.get("room") as string;
 
-    setMessages(messages.push(message));
+    setChats(
+      chats.merge(
+        Map({
+          [roomId]: Map({
+            scroll: scrollY,
+            lists: messages,
+          }),
+        })
+      )
+    );
+
+    addToStore("scroll", {
+      id: roomId,
+      value: scrollY,
+    });
+  };
+
+  const handleSetAutoRoomName = (name: string) => {
+    const roomId = searchParams.get("room") as string;
+    const newData = {
+      id: roomId,
+      title: name
+        .split(" ")
+        .map((s) => s[0].toUpperCase() + s.substring(1))
+        .join(" "),
+      lastUpdated: new Date().toISOString(),
+    };
+
+    const newRooms = rooms.map((data) => (data.id === roomId ? newData : data));
+
+    setRooms(newRooms);
+    addToStore("rooms", newData);
+  };
+
+  useEffect(() => {
+    if (window.innerWidth > 768) {
+      setSidebarActive(true);
+    } else {
+      setSidebarActive(false);
+    }
+
+    // const message = Map({
+    //   id: 0,
+    //   text: "Halo! Ada yang bisa saya bantu?",
+    //   isUser: false,
+    // });
+
+    // setMessages(messages.push(message));
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   useEffect(() => {
     if (isFinishRenderMessage && inRenderedMessage.size > 0) {
       const wait = setTimeout(() => {
         console.log("CHANGE");
-        // alert("height: " + window.innerHeight + screen.height);
-        const rendered = inRenderedMessage.get(0) as Map<string, any>;
+
+        const roomId = searchParams.get("room") as string;
+
+        const rendered = (inRenderedMessage.get(0) as Map<string, any>).merge(
+          Map({
+            room_id: roomId,
+          })
+        );
+
         setInRenderedMessage(List([]));
         setMessages(messages.push(rendered));
+        setIsReadyToPushMessage(true);
+        addToStore("chats", Object.fromEntries(rendered.entries()));
       }, 300);
       return () => clearTimeout(wait);
     } else if (
@@ -403,110 +503,356 @@ const HomePage: React.FC = React.memo(() => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const loadChat = async () => {
+      const roomId = searchParams.get("room") as string;
+      let chat = chats.get(roomId) as Map<string, any>;
+      if (!chat) {
+        const lists = (await getAllIndexedFromStore("chats", {
+          indexName: "idx_room_id",
+          indexValue: roomId,
+        })) as any[];
+        // console.log("list", lists);
+
+        if (!lists.length) return;
+
+        // lists.sort(
+        //   (a, b) =>
+        //     new Date(a.lastUpdated).getTime() -
+        //     new Date(b.lastUpdated).getTime()
+        // );
+
+        const immutableList = lists.map((list) => Map(list));
+
+        const scroll: {
+          id: string;
+          value: number;
+        } = await getFromStore("scroll", roomId);
+        console.log("scroll", scroll);
+        chat = Map<string, any>({
+          scroll: scroll.value,
+          lists: List(immutableList),
+        });
+        setChats(
+          chats.merge(
+            Map({
+              [roomId]: chat,
+            })
+          )
+        );
+      }
+
+      const scroll = chat.get("scroll") as number;
+      const lists = chat.get("lists") as List<Map<string, any>>;
+      setMessages(lists);
+
+      const t = setTimeout(() => {
+        window.scrollTo({
+          top: scroll,
+          // behavior: "smooth",
+        });
+        setShowContent(true);
+      }, 10);
+
+      return () => clearTimeout(t);
+    };
+    // console.log("context", contextLoading);
+    if (!contextLoading) {
+      loadChat();
+    }
+  }, [searchParams, contextLoading]);
+
+  useEffect(() => {
+    if (rooms.length) {
+      const room = searchParams.get("room") as string;
+      // console.log("init room", rooms, room);
+      setIsRoomNameEmpty(
+        rooms
+          .filter((data) => data.id === room)
+          .map((data) => (data.title ? false : true))[0] || false
+      );
+    }
+  }, [rooms, searchParams]);
+  // console.log(isRoomNameEmpty);
+  useEffect(() => {
+    if (isReadyToPushMessage) {
+      const timeout = setTimeout(() => {
+        const id = searchParams.get("room") as string;
+        let room = chats.get(id) as Map<string, any>;
+
+        // console.log("size", room?.size);
+        if (!room?.size) {
+          room = Map<string, any>({
+            scroll: 0,
+          });
+        }
+
+        setChats(
+          chats.merge(
+            Map({
+              [id]: room.merge(
+                Map({
+                  lists: messages,
+                })
+              ),
+            })
+          )
+        );
+
+        setIsReadyToPushMessage(false);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isReadyToPushMessage]);
+  // console.log(chats);
+  useEffect(() => {
+    if (scrollY >= 0) {
+      const timeout = setTimeout(() => {
+        handleSaveScroll();
+        // console.log(scrollY);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [scrollY]);
+
+  useEffect(() => {
+    if (sidebarActive && innerWidth < 768) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [innerWidth]);
+
   return (
-    <div
-      className="min-h-screen bg-base-100 flex flex-col items-center justify-center p-4"
-      style={{ minHeight: "100vh" }}
+    <SidebarContainer
+      active={sidebarActive}
+      closeSidebar={() => {
+        document.body.style.overflow = "auto";
+        setSidebarActive(false);
+      }}
     >
+      <Sidebar
+        width={sidebarWidth}
+        active={sidebarActive}
+        setActive={setSidebarActive}
+        action={() => {
+          handleSaveScroll();
+          setShowContent(false);
+        }}
+      />
       <div
-        className="w-full h-full max-w-md bg-white shadow-lg rounded-lg p-6"
+        className="min-h-screen bg-base-100 flex flex-col items-center justify-center p-4"
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          backgroundColor: "#10001b",
+          marginLeft: sidebarActive && innerWidth >= 768 ? sidebarWidth : 0,
+          // minHeight: "100vh",
         }}
       >
         <div
-          className="navbar"
+          className="max-w-md bg-white shadow-lg rounded-lg p-6"
           style={{
-            backgroundImage:
-              "linear-gradient( 109.6deg,  rgba(228,107,232,1) 11.2%, rgba(87,27,226,1) 96.7% )",
-            position: "fixed",
-            top: 0,
-            width: "100%",
-            padding: "0 20px",
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <img
-            style={{ cursor: "pointer" }}
-            src="/aigptku.id-white.png"
-            alt=""
-            width={150}
-          />
-        </div>
-        <div
-          className="space-y-4"
-          style={{
-            width: innerWidth < 768 ? "98vw" : "80vw",
-            maxWidth: "800px",
-            minHeight: "100vh",
             display: "flex",
             flexDirection: "column",
-            padding: "120px 20px",
-          }}
-        >
-          {messages.map((msg, index) => (
-            <ChatBubbleMemo key={index} message={msg} />
-          ))}
-          {inRenderedMessage.map((msg, index) => (
-            <ChatBubble key={index} message={msg} />
-          ))}
-        </div>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            height: 70,
-            position: "fixed",
-            bottom: 0,
-            width: "100vw",
-            display: "flex",
-            justifyContent: "center",
+            alignItems: "center",
             backgroundColor: "#10001b",
-            boxShadow: "0 -10px 6px rgba(24, 0, 40, 0.5)",
           }}
         >
           <div
+            id="navbar"
+            className="navbar"
             style={{
-              position: "relative",
+              backgroundImage:
+                "linear-gradient( 109.6deg,  rgba(228,107,232,1) 11.2%, rgba(87,27,226,1) 96.7% )",
+              position: "fixed",
+              right: 0,
+              top: 0,
+              width:
+                sidebarActive && innerWidth >= 768
+                  ? innerWidth - sidebarWidth
+                  : "100vw",
+              padding: "0 20px",
               display: "flex",
-              flexDirection: "row",
               justifyContent: "center",
-              width: "80%",
-              maxWidth: "800px",
+              alignItems: "center",
+              height: 60,
             }}
           >
-            <input
-              style={{
-                height: 50,
-                width: "100%",
-                paddingLeft: innerWidth < 768 ? "4%" : "2%",
-                paddingRight: innerWidth < 768 ? "15%" : "8%",
-                borderRadius: 20,
-              }}
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Tekan Enter untuk mengirim..."
+            {!sidebarActive && (
+              <div
+                style={
+                  innerWidth >= 768
+                    ? {
+                        left: 10,
+                        position: "absolute",
+                        display: "block",
+                        width: "100%",
+                      }
+                    : {
+                        position: "absolute",
+                        padding: "0 10px",
+                        width: "100vw",
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }
+                }
+              >
+                <button
+                  onClick={() => {
+                    const e = document.getElementById("navbar") as HTMLElement;
+                    e.style.transition = "ease-in-out 300ms";
+
+                    setSidebarActive(true);
+                    document.body.style.overflow = "hidden";
+
+                    setTimeout(() => {
+                      e.style.transition = "";
+                    }, 300);
+                  }}
+                  className="room"
+                  style={{
+                    padding: 10,
+                    borderRadius: 10,
+                  }}
+                >
+                  {innerWidth >= 768 ? (
+                    <PiSidebarFill size={20} color="white" />
+                  ) : (
+                    <FaBarsStaggered size={20} color="white" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    handleAddRoom();
+                    setSidebarActive(true);
+                  }}
+                  className="room"
+                  style={{
+                    padding: 10,
+                    borderRadius: 10,
+                  }}
+                >
+                  <RiEditFill size={20} color="white" />
+                </button>
+              </div>
+            )}
+            <img
+              style={{ cursor: "pointer" }}
+              src="/aigptku.id-white.png"
+              alt=""
+              width={150}
             />
-            <button
-              style={{
-                right: innerWidth < 768 ? "3%" : 10,
-                top: 10,
-                position: "absolute",
-              }}
-              type="submit"
-            >
-              <MdSend className="mdsend" size={30} />
-            </button>
           </div>
-        </form>
+          <div
+            id="content"
+            className="space-y-4"
+            style={{
+              opacity: showContent ? 1 : 0,
+              width: innerWidth < 768 ? "98vw" : "80%",
+              maxWidth: "800px",
+              minHeight: "100vh",
+              display: "flex",
+              flexDirection: "column",
+              padding: "120px 20px",
+            }}
+          >
+            {messages.map((msg, index) => (
+              <ChatBubbleMemo key={index} message={msg} />
+            ))}
+            {inRenderedMessage.map((msg, index) => (
+              <ChatBubble key={index} message={msg} />
+            ))}
+          </div>
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              height: 70,
+              position: "fixed",
+              bottom: 0,
+              width:
+                sidebarActive && innerWidth >= 768
+                  ? innerWidth - sidebarWidth
+                  : "100vw",
+              display: "flex",
+              justifyContent: "center",
+              backgroundColor: "#10001b",
+              boxShadow: "0 -10px 6px rgba(24, 0, 40, 0.5)",
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                width: "80%",
+                maxWidth: "800px",
+              }}
+            >
+              <input
+                style={{
+                  height: 50,
+                  width: "100%",
+                  paddingLeft: innerWidth < 768 ? "4%" : "2%",
+                  paddingRight: innerWidth < 768 ? "15%" : "8%",
+                  borderRadius: 20,
+                }}
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Tekan Enter untuk mengirim..."
+              />
+              <button
+                style={{
+                  right: innerWidth < 768 ? "3%" : 10,
+                  top: 10,
+                  position: "absolute",
+                }}
+                type="submit"
+              >
+                <MdSend className="mdsend" size={30} />
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </SidebarContainer>
   );
 });
+
+const SidebarContainer = ({
+  children,
+  active,
+  closeSidebar,
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  closeSidebar: () => void;
+}) => {
+  const { innerWidth } = useGlobalContext();
+  return (
+    <div>
+      <div
+        onClick={() => (active && innerWidth < 768 ? closeSidebar() : null)}
+        style={
+          active && innerWidth < 768
+            ? {
+                position: "fixed",
+                backgroundColor: "black",
+                opacity: 0.5,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 9,
+                transition: "ease-in-out 300ms",
+              }
+            : {
+                position: "relative",
+                transition: "ease-in-out 300ms",
+              }
+        }
+      />
+      {children}
+    </div>
+  );
+};
 
 export default HomePage;

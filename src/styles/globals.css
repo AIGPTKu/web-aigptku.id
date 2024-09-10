@@ -94,12 +94,8 @@ Sample CSS styles styles.css .chat-bubble {
 
 .navbar {
   z-index: 1;
-  transition: ease-out 300ms;
+  box-sizing: "content-box";
   box-shadow: 0px 10px 6px rgba(24, 0, 40, 0.5); /* 0px 5px 10px = offset, blur, spread */
-}
-
-.navbar:hover {
-  transition: ease-in 300ms;
 }
 
 .mdsend {
@@ -163,4 +159,20 @@ input::placeholder {
 .btncopy:hover {
   opacity: 1;
   transition: ease-in 300ms;
+}
+
+.room {
+  background-color: "";
+}
+
+.room:hover {
+  background-color: #7200c351;
+}
+
+.btnthree {
+  color: #484848;
+}
+
+.btnthree:hover {
+  color: #fff;
 }
