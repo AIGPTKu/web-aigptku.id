@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { GlobalProvider } from "@/context/global";
+import { Suspense } from "react";
 
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -42,7 +43,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#10001b" />
       </head>
       <GlobalProvider>
-        <body>{children}</body>
+        <Suspense>
+          <body>{children}</body>
+        </Suspense>
       </GlobalProvider>
     </html>
   );
