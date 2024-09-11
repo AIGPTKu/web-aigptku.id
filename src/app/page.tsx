@@ -35,7 +35,7 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
         components={{
           code({ node, className, children }) {
             const match = /language-(\w+)/.exec(className || "");
-            return match ? (
+            return match || !!/\n/.exec(String(children)) ? (
               <div
                 style={{
                   position: "relative",
@@ -54,7 +54,9 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
                     borderRadius: "10px 10px 0 0",
                   }}
                 >
-                  <span style={{ fontSize: 10 }}>{match[1]}</span>
+                  <span style={{ fontSize: 10 }}>
+                    {(match && match[1]) || "kode"}
+                  </span>
                   <ButtonCopyCode
                     content={String(children).replace(/\n$/, "")}
                   />
@@ -67,7 +69,7 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
                     backgroundColor: "black",
                   }}
                   style={nightOwl}
-                  language={match[1]}
+                  language={(match && match[1]) || ""}
                   PreTag="div"
                   children={String(children).replace(/\n$/, "")}
                   // {...props}
