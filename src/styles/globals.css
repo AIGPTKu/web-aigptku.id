@@ -55,6 +55,7 @@ Sample CSS styles styles.css .chat-bubble {
 .markdown h2,
 .markdown h3,
 .markdown h4 {
+  line-height: 1.2;
   font-weight: bold;
   color: #ffffffde;
   margin-top: 20px; /* Jarak atas yang lebih besar */
