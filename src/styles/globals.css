@@ -51,18 +51,62 @@ Sample CSS styles styles.css .chat-bubble {
   color: #ffffffb9;
 }
 
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  font-weight: bold;
+  color: #ffffffde;
+  margin-top: 20px; /* Jarak atas yang lebih besar */
+  margin-bottom: 10px; /* Sesuaikan jarak bawah */
+}
+
+.markdown h1 {
+  font-size: 36px;
+}
+
+.markdown h2 {
+  font-size: 30px;
+}
+
+.markdown h3 {
+  font-size: 24px;
+}
+
+.markdown h4 {
+  font-size: 20px;
+}
+
+.markdown a {
+  color: #ff00ae;
+  font-weight: 400;
+}
+
+.markdown blockquote {
+  color: white;
+}
+
 @media screen and (max-width: 768px) {
   /* Gaya untuk layar dengan lebar minimum 600px */
   .markdown {
     font-size: 14px;
   }
-}
 
-.markdown h1,
-.markdown h2,
-.markdown h3 {
-  color: #ffffffde;
-  margin-top: 10px;
+  .markdown h1 {
+    font-size: 32px;
+  }
+
+  .markdown h2 {
+    font-size: 24px;
+  }
+
+  .markdown h3 {
+    font-size: 18px;
+  }
+
+  .markdown h4 {
+    font-size: 16px;
+  }
 }
 
 .markdown strong {
@@ -74,7 +118,14 @@ Sample CSS styles styles.css .chat-bubble {
   margin: 5px 0;
 }
 .markdown ul {
+  list-style-type: disc;
   padding-left: 20px;
+}
+
+.markdown hr {
+  margin: 40px 0; /* Atur jarak atas dan bawah sesuai kebutuhan */
+  border: none; /* Hapus border default */
+  border-top: 1px solid #ffffff69; /* Tambahkan border */
 }
 
 .markdown ol {
@@ -90,9 +141,9 @@ Sample CSS styles styles.css .chat-bubble {
   border-radius: 3px;
 }
 .markdown blockquote {
-  border-left: 3px solid #ccc;
+  border-left: 2px solid #ff00ae;
   padding-left: 10px;
-  color: #555;
+  color: #ffffffdd;
 }
 
 .navbar {
