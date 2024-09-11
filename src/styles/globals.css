@@ -20,6 +20,9 @@ html {
   padding: 0 15px;
   color: white;
   align-self: flex-end;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  -ms-word-wrap: break-word;
 }
 
 .chat-bubble-bot {

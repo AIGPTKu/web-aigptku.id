@@ -43,9 +43,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#10001b" />
       </head>
       <GlobalProvider>
-        <Suspense>
-          <body>{children}</body>
-        </Suspense>
+        <body>
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        </body>
       </GlobalProvider>
     </html>
   );

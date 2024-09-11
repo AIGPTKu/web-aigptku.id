@@ -49,7 +49,7 @@ export async function createInitStore() {
     },
   });
 
-  console.log("init db created");
+  // console.log("init db created");
 }
 
 export const addToStore = async (store: string, data: any) => {
@@ -64,7 +64,7 @@ export const deleteFromStore = async (store: string, key: string) => {
 
 export const getAllFromStore = async (store: string) => {
   // const db = await openDB(dbName, 1);
-  console.log(store, db?.objectStoreNames);
+  // console.log(store, db?.objectStoreNames);
   const result = await db.getAll(store);
   return result;
 };

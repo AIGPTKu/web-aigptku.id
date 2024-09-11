@@ -57,7 +57,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     // );
 
     const r = await getAllFromStore("rooms");
-    console.log("rooms first", r);
+    // console.log("rooms first", r);
     if (r.length) {
       r.sort(
         (a, b) =>
@@ -78,11 +78,11 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         value: 0,
       });
       await addToStore("chats", { ...defaultFirstMessage, room_id: roomId });
-      console.log("create store");
+      // console.log("create store");
       router.push("?room=" + roomId);
     }
 
-    console.log("set context loading");
+    // console.log("set context loading");
     setContextLoading(false);
   };
 

@@ -13,7 +13,7 @@ import remarkMath from "remark-math";
 import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
 import { FaBarsStaggered, FaCheck } from "react-icons/fa6";
 import Sidebar from "@/components/Sidebar";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PiSidebarFill } from "react-icons/pi";
 import { RiEditFill } from "react-icons/ri";
 import {
@@ -258,6 +258,7 @@ const ButtonCopyCode = ({ content }: { content: string }) => {
 };
 
 const HomePage: React.FC = React.memo(() => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const {
     innerWidth,
@@ -275,7 +276,8 @@ const HomePage: React.FC = React.memo(() => {
   const [scrollY, setScrollY] = useState(0);
   const [showContent, setShowContent] = useState(false);
   const [isRoomNameEmpty, setIsRoomNameEmpty] = useState(false);
-  console.log("sidebar", sidebarActive);
+  const [isNotFound, setIsNotFound] = useState(false);
+  // console.log("sidebar", sidebarActive);
   const [inRenderedMessage, setInRenderedMessage] = useState<
     List<Map<string, any>>
   >(List([]));
@@ -506,6 +508,14 @@ const HomePage: React.FC = React.memo(() => {
   useEffect(() => {
     const loadChat = async () => {
       const roomId = searchParams.get("room") as string;
+      if (!roomId && rooms.length) {
+        // console.log(rooms);
+        router.push("?room=" + rooms[0].id);
+        return;
+      }
+
+      setIsNotFound(false);
+
       let chat = chats.get(roomId) as Map<string, any>;
       if (!chat) {
         const lists = (await getAllIndexedFromStore("chats", {
@@ -514,7 +524,11 @@ const HomePage: React.FC = React.memo(() => {
         })) as any[];
         // console.log("list", lists);
 
-        if (!lists.length) return;
+        if (!lists.length) {
+          setIsNotFound(true);
+          setShowContent(true);
+          return;
+        }
 
         // lists.sort(
         //   (a, b) =>
@@ -528,7 +542,7 @@ const HomePage: React.FC = React.memo(() => {
           id: string;
           value: number;
         } = await getFromStore("scroll", roomId);
-        console.log("scroll", scroll);
+        // console.log("scroll", scroll);
         chat = Map<string, any>({
           scroll: scroll.value,
           lists: List(immutableList),
@@ -544,7 +558,12 @@ const HomePage: React.FC = React.memo(() => {
 
       const scroll = chat.get("scroll") as number;
       const lists = chat.get("lists") as List<Map<string, any>>;
-      setMessages(lists);
+      let listsStartIndex = lists.size - 10;
+      if (listsStartIndex < 0) {
+        listsStartIndex = 0;
+      }
+
+      setMessages(lists.slice(listsStartIndex));
 
       const t = setTimeout(() => {
         window.scrollTo({
@@ -616,12 +635,16 @@ const HomePage: React.FC = React.memo(() => {
   }, [scrollY]);
 
   useEffect(() => {
-    if (sidebarActive && innerWidth < 768) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
+    if (!contextLoading) {
+      if (sidebarActive && innerWidth < 768) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "auto";
+      }
     }
   }, [innerWidth]);
+
+  // console.log(isNotFound);
 
   return (
     <SidebarContainer
@@ -756,6 +779,21 @@ const HomePage: React.FC = React.memo(() => {
               padding: "120px 20px",
             }}
           >
+            {isNotFound && (
+              <div
+                style={{
+                  width: "calc(98vw - 20px * 2)",
+                  height: "70vh",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "white",
+                }}
+              >
+                <h1>404 | Halaman Tidak ditemukan</h1>
+              </div>
+            )}
+
             {messages.map((msg, index) => (
               <ChatBubbleMemo key={index} message={msg} />
             ))}
