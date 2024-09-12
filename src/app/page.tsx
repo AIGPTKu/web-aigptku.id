@@ -29,7 +29,9 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   return (
     <div
       className={`chat-bubble ${
-        message.get("isUser") ? "chat-bubble-user" : "chat-bubble-bot"
+        (message.get("isUser") as boolean)
+          ? "chat-bubble-user"
+          : "chat-bubble-bot"
       }`}
     >
       <ReactMarkdown
@@ -109,7 +111,6 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
     </div>
   );
 };
-
 const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
   ({ message }) => {
     const { innerWidth } = useGlobalContext();
