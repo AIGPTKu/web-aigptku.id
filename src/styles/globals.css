@@ -49,6 +49,7 @@ Sample CSS styles styles.css .chat-bubble {
   font-size: 16px;
   line-height: 2;
   color: #ffffffb9;
+  margin: 0px 0px;
 }
 
 .markdown h1,
@@ -85,13 +86,6 @@ Sample CSS styles styles.css .chat-bubble {
 
 .markdown blockquote {
   color: white;
-}
-
-.markdown {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
-  font-size: 18px;
 }
 
 .markdown th,

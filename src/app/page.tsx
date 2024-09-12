@@ -396,7 +396,6 @@ const HomePage: React.FC = React.memo(() => {
 
         try {
           while (true) {
-            console.log("RENDER");
             const { done, value } = await reader!.read();
             if (done) break;
 
@@ -405,17 +404,24 @@ const HomePage: React.FC = React.memo(() => {
 
             // Process each line of the received text
             const lines = receivedText.split("data: ");
+
             for (const line of lines) {
               if (!line.trim()) {
                 continue;
               }
 
               let data = JSON.parse(line.trim());
+              // console.log("RENDER", data.content, /```$/.exec(data.content));
               newMessages.text += data.content;
               newMessages.text = newMessages.text.replaceAll(
                 /\\\(|\\\)|\\\[|\\\]/g,
                 "$$$"
               );
+              if (/[`]+$/.exec(data.content)) {
+                data = null;
+                continue;
+              }
+
               setInRenderedMessage(
                 List([
                   Map({
