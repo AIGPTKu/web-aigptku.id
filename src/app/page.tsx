@@ -22,6 +22,7 @@ import {
   getAllIndexedFromStore,
   getFromStore,
 } from "@/components/db";
+import remarkGfm from "remark-gfm";
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   const { innerWidth } = useGlobalContext();
@@ -87,10 +88,22 @@ const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
               />
             );
           },
+          table({ className, children }) {
+            return (
+              <div
+                style={{
+                  width: "100%",
+                  overflowX: "auto",
+                }}
+              >
+                <table className={className}>{children}</table>
+              </div>
+            );
+          },
         }}
         className="markdown"
         children={message.get("text") as string}
-        remarkPlugins={[remarkMath]}
+        remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeKatex]}
       />
     </div>
@@ -164,10 +177,22 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
                 />
               );
             },
+            table({ className, children }) {
+              return (
+                <div
+                  style={{
+                    width: "100%",
+                    overflowX: "auto",
+                  }}
+                >
+                  <table className={className}>{children}</table>
+                </div>
+              );
+            },
           }}
           className="markdown"
           children={message.get("text") as string}
-          remarkPlugins={[remarkMath]}
+          remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[rehypeKatex]}
         />
         {!(message.get("isUser") as boolean) && (

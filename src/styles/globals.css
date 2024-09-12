@@ -87,6 +87,29 @@ Sample CSS styles styles.css .chat-bubble {
   color: white;
 }
 
+.markdown {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 18px;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid #ffffff2a;
+  padding: 5px 10px;
+  text-align: left;
+}
+
+.markdown th {
+  background-color: #cd00a4;
+  color: white;
+}
+
+.markdown tr:nth-child(even) {
+  /* background-color: #34004d; */
+}
+
 @media screen and (max-width: 768px) {
   /* Gaya untuk layar dengan lebar minimum 600px */
   .markdown {
