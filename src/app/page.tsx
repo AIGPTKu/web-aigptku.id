@@ -223,7 +223,8 @@ const ButtonCopy = ({ content }: { content: string }) => {
       onClick={(e) => {
         e.currentTarget.style.opacity = "0.5";
         setCopied(true);
-        navigator.clipboard.writeText(content);
+        // alert(navigator.clipboard);
+        navigator.clipboard?.writeText(content);
       }}
       className="btncopy"
     >
@@ -395,6 +396,7 @@ const HomePage: React.FC = React.memo(() => {
         const newMessages = { text: "", isUser: false };
 
         try {
+          let loop = 0;
           while (true) {
             const { done, value } = await reader!.read();
             if (done) break;
@@ -410,14 +412,17 @@ const HomePage: React.FC = React.memo(() => {
                 continue;
               }
 
+              loop++;
+
               let data = JSON.parse(line.trim());
-              // console.log("RENDER", data.content, /```$/.exec(data.content));
+              // if (/---/.exec(data.content)) {
+              //   console.log("RENDER", data.content, loop);
+              // }
               newMessages.text += data.content;
-              newMessages.text = newMessages.text.replaceAll(
-                /\\\(|\\\)|\\\[|\\\]/g,
-                "$$$"
-              );
-              if (/[`]+$/.exec(data.content)) {
+              newMessages.text = newMessages.text
+                .replaceAll(/\\\(|\\\)|\\\[|\\\]/g, "$$$")
+                .replaceAll(/^---\n|\n---$/g, "");
+              if (/[`-]+/.exec(data.content)) {
                 data = null;
                 continue;
               }
@@ -448,6 +453,7 @@ const HomePage: React.FC = React.memo(() => {
 
   const handleSaveScroll = () => {
     const roomId = searchParams.get("room") as string;
+    if (!roomId) return;
 
     setChats(
       chats.merge(
