@@ -328,7 +328,7 @@ const HomePage: React.FC = React.memo(() => {
         const prevContent = [];
 
         for (let i = size - 1; i >= 0; i--) {
-          if (prevContent.length >= 9) {
+          if (size < 3 || prevContent.length >= 9) {
             break;
           }
 

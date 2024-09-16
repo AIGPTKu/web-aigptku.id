@@ -53,7 +53,6 @@ export async function createInitStore() {
 }
 
 export const addToStore = async (store: string, data: any) => {
-  // const db = await openDB(dbName, 1);
   return await db?.put(store, data);
 };
 
