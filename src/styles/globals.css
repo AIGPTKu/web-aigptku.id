@@ -52,6 +52,11 @@ Sample CSS styles styles.css .chat-bubble {
   margin: 0px 0px;
 }
 
+.markdown img {
+  border-radius: 20px;
+  border: 1px solid #272727;
+}
+
 .markdown h1,
 .markdown h2,
 .markdown h3,

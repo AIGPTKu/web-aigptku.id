@@ -288,6 +288,14 @@ const ButtonCopyCode = ({ content }: { content: string }) => {
   );
 };
 
+interface FunctionCall {
+  name: string;
+  arguments: {
+    prompt: string;
+    query: string;
+  };
+}
+
 const HomePage: React.FC = React.memo(() => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -318,6 +326,122 @@ const HomePage: React.FC = React.memo(() => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+  };
+
+  const handleFunctionCall = async (data: FunctionCall) => {
+    // console.log(data);
+    switch (data.name) {
+      case "image_generate": {
+        const newMessages = { text: "", isUser: false };
+
+        const placeholderImage =
+          "https://images.placeholders.dev/?width=1024&height=1024&text=Sedang%20generate%20gambar%20...&bgColor=%23000&textColor=%23fff&fontSize=30";
+
+        setInRenderedMessage(
+          List([
+            Map({
+              text: `![Image](${placeholderImage})\n`,
+              isUser: newMessages.isUser,
+            }),
+          ])
+        );
+
+        const res = await fetch(`https://api.aigptku.id/v1/generative/image`, {
+          method: "POST",
+          headers: {
+            Accept: "text/event-stream",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: data.arguments.prompt,
+          }),
+        });
+
+        if (res.status >= 400) {
+          console.error("Error fetching user data:", res.status);
+          return;
+        }
+
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        let receivedText = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader!.read();
+            if (done) break;
+
+            // Decode the chunk and append it to the received text
+            receivedText += decoder.decode(value, { stream: true });
+
+            // Process each line of the received text
+            const lines = receivedText.split("data: ");
+
+            for (const line of lines) {
+              if (!line.trim()) {
+                continue;
+              }
+
+              let data = JSON.parse(line.trim());
+
+              if (data.image_url) {
+                newMessages.text += `![Image](${data.image_url})\n`;
+                setInRenderedMessage(
+                  List([
+                    Map({
+                      text: newMessages.text,
+                      isUser: newMessages.isUser,
+                    }),
+                  ])
+                );
+                data = null;
+                continue;
+              }
+
+              newMessages.text += data.content;
+              newMessages.text = newMessages.text
+                .replaceAll(/\\\(|\\\)|\\\[|\\\]/g, "$$$")
+                .replaceAll(/^---\n|\n---$/g, "");
+              if (/[`-]+/.exec(data.content)) {
+                data = null;
+                continue;
+              }
+
+              setInRenderedMessage(
+                List([
+                  Map({
+                    text: newMessages.text,
+                    isUser: newMessages.isUser,
+                  }),
+                ])
+              );
+              data = null;
+            }
+
+            receivedText = "";
+          }
+        } finally {
+          // Ensure the reader is closed when the loop exits
+          reader?.cancel();
+        }
+
+        break;
+      }
+      case "get_web_search": {
+        const newMessages = { text: "", isUser: false };
+        setInRenderedMessage(
+          List([
+            Map({
+              text: `Maaf fitur **Web Search** masih dalam tahap pengembangan. silahkan coba lagi nanti`,
+              isUser: newMessages.isUser,
+            }),
+          ])
+        );
+        break;
+      }
+    }
+    return setIsFinishRenderMessage(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -395,6 +519,8 @@ const HomePage: React.FC = React.memo(() => {
 
         const newMessages = { text: "", isUser: false };
 
+        let isFunctionCall = false;
+
         try {
           let loop = 0;
           while (true) {
@@ -418,6 +544,12 @@ const HomePage: React.FC = React.memo(() => {
               // if (/---/.exec(data.content)) {
               //   console.log("RENDER", data.content, loop);
               // }
+              if (data.function_call) {
+                handleFunctionCall(data.function_call);
+                isFunctionCall = true;
+                continue;
+              }
+
               newMessages.text += data.content;
               newMessages.text = newMessages.text
                 .replaceAll(/\\\(|\\\)|\\\[|\\\]/g, "$$$")
@@ -444,7 +576,9 @@ const HomePage: React.FC = React.memo(() => {
           // Ensure the reader is closed when the loop exits
           reader?.cancel();
         }
-        setIsFinishRenderMessage(true);
+        if (!isFunctionCall) {
+          setIsFinishRenderMessage(true);
+        }
       } catch (error) {
         console.error("Error processing stream:", error);
       }
