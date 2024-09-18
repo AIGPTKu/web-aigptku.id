@@ -428,7 +428,7 @@ const HomePage: React.FC = React.memo(() => {
 
         break;
       }
-      case "get_web_search": {
+      case "web_search": {
         const newMessages = { text: "", isUser: false };
         setInRenderedMessage(
           List([
