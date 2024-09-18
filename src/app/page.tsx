@@ -452,7 +452,7 @@ const HomePage: React.FC = React.memo(() => {
         const prevContent = [];
 
         for (let i = size - 1; i >= 0; i--) {
-          if (size < 3 || prevContent.length >= 9) {
+          if (size < 2 || prevContent.length >= 9) {
             break;
           }
 
@@ -541,10 +541,8 @@ const HomePage: React.FC = React.memo(() => {
               loop++;
 
               let data = JSON.parse(line.trim());
-              // if (/---/.exec(data.content)) {
-              //   console.log("RENDER", data.content, loop);
-              // }
-              if (data.function_call) {
+              // console.log(data);
+              if (data.function_call.name) {
                 handleFunctionCall(data.function_call);
                 isFunctionCall = true;
                 continue;
@@ -671,6 +669,7 @@ const HomePage: React.FC = React.memo(() => {
       inRenderedMessage.size > 0 &&
       window.innerHeight >= screen.height - 200
     ) {
+      // console.log("scroll");
       window.scrollTo(0, document.body.scrollHeight);
     }
   }, [inRenderedMessage, isFinishRenderMessage]);
