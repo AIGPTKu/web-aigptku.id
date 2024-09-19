@@ -542,7 +542,7 @@ const HomePage: React.FC = React.memo(() => {
 
               let data = JSON.parse(line.trim());
               // console.log(data);
-              if (data.function_call.name) {
+              if (data.function_call?.name) {
                 handleFunctionCall(data.function_call);
                 isFunctionCall = true;
                 continue;
