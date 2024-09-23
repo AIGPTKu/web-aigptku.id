@@ -433,7 +433,7 @@ const HomePage: React.FC = React.memo(() => {
           ])
         );
 
-        const res = await fetch(`http://localhost:4000/v1/generative/image`, {
+        const res = await fetch(`https://api.aigptku.id/v1/generative/image`, {
           method: "POST",
           headers: {
             Accept: "text/event-stream",
@@ -604,7 +604,7 @@ const HomePage: React.FC = React.memo(() => {
         const abort = new AbortController();
         setAbortController(abort);
 
-        const res = await fetch(`http://localhost:4000/v1/generative`, {
+        const res = await fetch(`https://api.aigptku.id/v1/generative`, {
           method: "POST",
           signal: abort.signal,
           headers: {
