@@ -12,12 +12,11 @@ html {
   /* word-spacing: 0.5rem; */
   /* padding: 0px 0px; */
   border-radius: 20px;
-  max-width: 75%;
   margin-bottom: 20px;
 }
 
 .chat-bubble-user {
-  padding: 0 15px;
+  padding: 2px 15px;
   color: white;
   align-self: flex-end;
   overflow-wrap: break-word;

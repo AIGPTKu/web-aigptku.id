@@ -1,8 +1,16 @@
 // app/page.tsx
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEvent,
+  ChangeEventHandler,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import "highlight.js/styles/github.css"; // Import a highlight.js theme
+import Resizer from "react-image-file-resizer";
+import ReactLoading from "react-loading";
 import {
   MdOutlineAttachFile,
   MdOutlineContentCopy,
@@ -15,7 +23,12 @@ import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
-import { FaBarsStaggered, FaCheck, FaRegCircleStop } from "react-icons/fa6";
+import {
+  FaArrowUp,
+  FaBarsStaggered,
+  FaCheck,
+  FaRegCircleStop,
+} from "react-icons/fa6";
 import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PiSidebarFill } from "react-icons/pi";
@@ -29,103 +42,41 @@ import {
 import remarkGfm from "remark-gfm";
 import { IoAttachSharp, IoStopCircle } from "react-icons/io5";
 import { GrFormClose } from "react-icons/gr";
+import { TbCircleArrowUpFilled } from "react-icons/tb";
+import { IoMdArrowUp } from "react-icons/io";
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   const { innerWidth } = useGlobalContext();
+  const isUser = message.get("isUser") as boolean;
+
   return (
     <div
-      className={`chat-bubble ${
-        (message.get("isUser") as boolean)
-          ? "chat-bubble-user"
-          : "chat-bubble-bot"
-      }`}
+      style={{
+        alignSelf: isUser ? "flex-end" : "flex-start",
+        maxWidth: "100%",
+      }}
     >
-      <ReactMarkdown
-        components={{
-          code({ node, className, children }) {
-            const match = /language-(\w+)/.exec(className || "");
-            return match || !!/\n/.exec(String(children)) ? (
-              <div
-                style={{
-                  position: "relative",
-                  border: "1px solid #272727",
-                  borderRadius: 10,
-                }}
-              >
-                <div
-                  style={{
-                    height: 25,
-                    padding: "0px 10px",
-                    backgroundColor: "#1e1e1e",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderRadius: "10px 10px 0 0",
-                  }}
-                >
-                  <span style={{ fontSize: 10 }}>
-                    {(match && match[1]) || "kode"}
-                  </span>
-                  <ButtonCopyCode
-                    content={String(children).replace(/\n$/, "")}
-                  />
-                </div>
-                <SyntaxHighlighter
-                  customStyle={{
-                    margin: 0,
-                    fontSize: innerWidth < 768 ? 10 : 14,
-                    borderRadius: "0px 0px 10px 10px",
-                    backgroundColor: "black",
-                  }}
-                  style={nightOwl}
-                  language={(match && match[1]) || ""}
-                  PreTag="div"
-                  children={String(children).replace(/\n$/, "")}
-                  // {...props}
-                />
-              </div>
-            ) : (
-              <code
-                className={className}
-                style={{
-                  backgroundColor: "#401b97",
-                  padding: "2px 5px",
-                  fontSize: innerWidth < 768 ? 12 : 14,
-                }}
-                children={children}
-              />
-            );
-          },
-          table({ className, children }) {
-            return (
-              <div
-                style={{
-                  width: "100%",
-                  overflowX: "auto",
-                }}
-              >
-                <table className={className}>{children}</table>
-              </div>
-            );
-          },
-        }}
-        className="markdown"
-        children={message.get("text") as string}
-        remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeKatex]}
-      />
-    </div>
-  );
-};
-const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
-  ({ message }) => {
-    const { innerWidth } = useGlobalContext();
-    return (
+      {message.get("filetype") && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 400,
+            marginBottom: 10,
+          }}
+        >
+          <img
+            src={message.get("file")}
+            alt=""
+            style={{
+              width: "100%",
+              borderRadius: 20,
+            }}
+          />
+        </div>
+      )}
       <div
         className={`chat-bubble ${
-          (message.get("isUser") as boolean)
-            ? "chat-bubble-user"
-            : "chat-bubble-bot"
+          isUser ? "chat-bubble-user" : "chat-bubble-bot"
         }`}
       >
         <ReactMarkdown
@@ -202,9 +153,123 @@ const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
           remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[rehypeKatex]}
         />
-        {!(message.get("isUser") as boolean) && (
-          <ButtonCopy content={message.get("text")} />
+      </div>
+    </div>
+  );
+};
+const ChatBubbleMemo: React.FC<{ message: Map<string, any> }> = React.memo(
+  ({ message }) => {
+    const { innerWidth } = useGlobalContext();
+    const isUser = message.get("isUser") as boolean;
+
+    return (
+      <div
+        style={{
+          alignSelf: isUser ? "flex-end" : "flex-start",
+          maxWidth: "100%",
+        }}
+      >
+        {message.get("filetype") && (
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 400,
+              marginBottom: 10,
+            }}
+          >
+            <img
+              src={message.get("file")}
+              alt=""
+              style={{
+                width: "100%",
+                borderRadius: 20,
+              }}
+            />
+          </div>
         )}
+        <div
+          className={`chat-bubble ${
+            isUser ? "chat-bubble-user" : "chat-bubble-bot"
+          }`}
+        >
+          <ReactMarkdown
+            components={{
+              code({ node, className, children }) {
+                const match = /language-(\w+)/.exec(className || "");
+                return match || !!/\n/.exec(String(children)) ? (
+                  <div
+                    style={{
+                      position: "relative",
+                      border: "1px solid #272727",
+                      borderRadius: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: 25,
+                        padding: "0px 10px",
+                        backgroundColor: "#1e1e1e",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderRadius: "10px 10px 0 0",
+                      }}
+                    >
+                      <span style={{ fontSize: 10 }}>
+                        {(match && match[1]) || "kode"}
+                      </span>
+                      <ButtonCopyCode
+                        content={String(children).replace(/\n$/, "")}
+                      />
+                    </div>
+                    <SyntaxHighlighter
+                      customStyle={{
+                        margin: 0,
+                        fontSize: innerWidth < 768 ? 10 : 14,
+                        borderRadius: "0px 0px 10px 10px",
+                        backgroundColor: "black",
+                      }}
+                      style={nightOwl}
+                      language={(match && match[1]) || ""}
+                      PreTag="div"
+                      children={String(children).replace(/\n$/, "")}
+                      // {...props}
+                    />
+                  </div>
+                ) : (
+                  <code
+                    className={className}
+                    style={{
+                      backgroundColor: "#401b97",
+                      padding: "2px 5px",
+                      fontSize: innerWidth < 768 ? 12 : 14,
+                    }}
+                    children={children}
+                  />
+                );
+              },
+              table({ className, children }) {
+                return (
+                  <div
+                    style={{
+                      width: "100%",
+                      overflowX: "auto",
+                    }}
+                  >
+                    <table className={className}>{children}</table>
+                  </div>
+                );
+              },
+            }}
+            className="markdown"
+            children={message.get("text") as string}
+            remarkPlugins={[remarkMath, remarkGfm]}
+            rehypePlugins={[rehypeKatex]}
+          />
+          {!(message.get("isUser") as boolean) && (
+            <ButtonCopy content={message.get("text")} />
+          )}
+        </div>
       </div>
     );
   }
@@ -336,6 +401,7 @@ const HomePage: React.FC = React.memo(() => {
   const [reader, setReader] =
     useState<ReadableStreamDefaultReader<Uint8Array>>();
   const [abortController, setAbortController] = useState<AbortController>();
+  const [imageUploadLoading, setImageUploadLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
@@ -367,7 +433,7 @@ const HomePage: React.FC = React.memo(() => {
           ])
         );
 
-        const res = await fetch(`https://api.aigptku.id/v1/generative/image`, {
+        const res = await fetch(`http://localhost:4000/v1/generative/image`, {
           method: "POST",
           headers: {
             Accept: "text/event-stream",
@@ -500,13 +566,34 @@ const HomePage: React.FC = React.memo(() => {
         const roomId = searchParams.get("room") as string;
 
         const input = inputValue.trim();
-        const newMessage = Map({
+        const inputFile = file?.url;
+
+        const obj = {
           text: inputValue,
           isUser: true,
           room_id: roomId,
-        });
+          file: "",
+          filetype: "",
+        };
+
+        if (inputFile) {
+          obj["file"] = inputFile;
+          obj["filetype"] = "image";
+        }
+
+        const newMessage = Map(obj);
+
+        // console.log("input", newMessage);
         setMessages(messages.push(newMessage));
         setInputValue("");
+        setFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+
+        setTimeout(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        }, 300);
 
         addToStore("chats", Object.fromEntries(newMessage.entries()));
 
@@ -517,7 +604,7 @@ const HomePage: React.FC = React.memo(() => {
         const abort = new AbortController();
         setAbortController(abort);
 
-        const res = await fetch(`https://api.aigptku.id/v1/generative`, {
+        const res = await fetch(`http://localhost:4000/v1/generative`, {
           method: "POST",
           signal: abort.signal,
           headers: {
@@ -531,6 +618,7 @@ const HomePage: React.FC = React.memo(() => {
               {
                 role: "user",
                 content: input,
+                file: file?.url,
               },
             ],
           }),
@@ -605,7 +693,9 @@ const HomePage: React.FC = React.memo(() => {
         } finally {
           // Ensure the reader is closed when the loop exits
           // reader?.cancel();
-          setIsFinishRenderMessage(true);
+          if (!isFunctionCall) {
+            setIsFinishRenderMessage(true);
+          }
         }
       } catch (error) {
         console.error("Error processing stream:", error);
@@ -658,12 +748,58 @@ const HomePage: React.FC = React.memo(() => {
     addToStore("rooms", newData);
   };
 
-  const handleAttachChange = (e: any) => {
-    setFile({
-      data: e.target.files[0],
-      url: URL.createObjectURL(e.target.files[0]),
-      name: e.target.files[0].name,
+  const handleAttachChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      // setFile({
+      //   data: e.target.files[0],
+      //   url: URL.createObjectURL(e.target.files[0]),
+      //   name: e.target.files[0].name,
+      // });
+      resizeImage(e.target.files[0]);
+    }
+  };
+
+  const resizeImage = (file: File) => {
+    Resizer.imageFileResizer(
+      file,
+      1024, // max width
+      1024, // max height
+      "jpeg", // compress format
+      80, // quality
+      0, // rotation
+      (f) => {
+        setFile({
+          data: f,
+          url: URL.createObjectURL(f as File),
+          name: file.name,
+        });
+
+        uploadFile(f as File);
+      },
+      "file" // output type, options: 'base64' | 'blob' | 'file'
+    );
+  };
+
+  const uploadFile = async (file: File) => {
+    setImageUploadLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`https://api.aigptku.id/v1/upload/temp`, {
+      method: "POST",
+      body: formData,
     });
+
+    if (res.status >= 400) {
+      console.error("Error fetching user data:", res.status);
+      return;
+    }
+
+    const response = await res.json();
+    setFile((current: any) => {
+      return { ...current, url: response.data.url };
+    });
+    setImageUploadLoading(false);
   };
 
   useEffect(() => {
@@ -692,9 +828,12 @@ const HomePage: React.FC = React.memo(() => {
   }, []);
 
   useEffect(() => {
-    if (inputTextRef.current && inputTextRef.current.scrollHeight < 150) {
+    if (inputTextRef.current) {
       inputTextRef.current.style.height = "auto"; // Reset height to auto
-      inputTextRef.current.style.height = `${inputTextRef.current.scrollHeight}px`; // Set height to scrollHeight
+      inputTextRef.current.style.height =
+        inputTextRef.current.scrollHeight > 150
+          ? "144px"
+          : `${inputTextRef.current.scrollHeight}px`; // Set height to scrollHeight
     }
   }, [inputValue]);
 
@@ -1091,10 +1230,32 @@ const HomePage: React.FC = React.memo(() => {
                         right: -5,
                         top: -5,
                         borderRadius: 10,
+                        zIndex: 2,
                       }}
                     >
                       <GrFormClose size={20} color="white" />
                     </div>
+                    {imageUploadLoading && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          width: "100%",
+                          height: "100%",
+                          zIndex: 1,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <ReactLoading
+                          delay={0}
+                          type="spin"
+                          color="black"
+                          height={"30%"}
+                          width={"30%"}
+                        />
+                      </div>
+                    )}
                     <img
                       src={file.url}
                       alt=""
@@ -1102,6 +1263,8 @@ const HomePage: React.FC = React.memo(() => {
                         height: "100%",
                         width: "100%",
                         borderRadius: 10,
+                        objectFit: "cover",
+                        filter: imageUploadLoading ? "blur(2px)" : "none",
                       }}
                     />
                   </div>
@@ -1112,10 +1275,10 @@ const HomePage: React.FC = React.memo(() => {
                   // minHeight: 50,
                   // padding: "12px 50px",
                   width: "100%",
-
                   backgroundColor: "transparent",
                   outline: "none",
                   color: "white",
+                  resize: "none",
                 }}
                 ref={inputTextRef}
                 rows={1}
@@ -1123,7 +1286,11 @@ const HomePage: React.FC = React.memo(() => {
                 onChange={handleInputChange}
                 onKeyDown={handleInputSubmit}
                 className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Tekan Cmd/Ctrl + Enter untuk mengirim..."
+                placeholder={
+                  innerWidth > 768
+                    ? "Tekan Cmd/Ctrl + Enter untuk mengirim..."
+                    : "Tanyakan apapun..."
+                }
               />
               <label
                 style={{
@@ -1153,7 +1320,7 @@ const HomePage: React.FC = React.memo(() => {
                 onClick={handleSubmit}
               >
                 {isFinishRenderMessage ? (
-                  <MdSend className="mdsend" size={30} />
+                  <IoMdArrowUp className="mdsend" size={30} />
                 ) : (
                   <IoStopCircle className="mdsend" size={30} />
                 )}
