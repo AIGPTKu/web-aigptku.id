@@ -1,9 +1,13 @@
 // app/page.tsx
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import "highlight.js/styles/github.css"; // Import a highlight.js theme
-import { MdOutlineContentCopy, MdSend } from "react-icons/md";
+import {
+  MdOutlineAttachFile,
+  MdOutlineContentCopy,
+  MdSend,
+} from "react-icons/md";
 import { Map, List } from "immutable";
 import { useGlobalContext } from "@/context/global";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -11,11 +15,11 @@ import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css"; // `rehype-katex` does not import the CSS for you
-import { FaBarsStaggered, FaCheck } from "react-icons/fa6";
+import { FaBarsStaggered, FaCheck, FaRegCircleStop } from "react-icons/fa6";
 import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PiSidebarFill } from "react-icons/pi";
-import { RiEditFill } from "react-icons/ri";
+import { RiAttachmentLine, RiEditFill } from "react-icons/ri";
 import {
   addToStore,
   getAllFromStore,
@@ -23,6 +27,8 @@ import {
   getFromStore,
 } from "@/components/db";
 import remarkGfm from "remark-gfm";
+import { IoAttachSharp, IoStopCircle } from "react-icons/io5";
+import { GrFormClose } from "react-icons/gr";
 
 const ChatBubble: React.FC<{ message: Map<string, any> }> = ({ message }) => {
   const { innerWidth } = useGlobalContext();
@@ -316,16 +322,31 @@ const HomePage: React.FC = React.memo(() => {
   const [showContent, setShowContent] = useState(false);
   const [isRoomNameEmpty, setIsRoomNameEmpty] = useState(false);
   const [isNotFound, setIsNotFound] = useState(false);
+  const [file, setFile] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // console.log("sidebar", sidebarActive);
   const [inRenderedMessage, setInRenderedMessage] = useState<
     List<Map<string, any>>
   >(List([]));
 
   const [inputValue, setInputValue] = useState("");
+  const inputTextRef = useRef<HTMLTextAreaElement>(null);
   const [isFinishRenderMessage, setIsFinishRenderMessage] = useState(true);
+  const [reader, setReader] =
+    useState<ReadableStreamDefaultReader<Uint8Array>>();
+  const [abortController, setAbortController] = useState<AbortController>();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
+  };
+
+  const handleInputSubmit = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Contoh kombinasi: Ctrl + Enter
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault(); // Mencegah perilaku default
+      handleSubmit();
+    }
   };
 
   const handleFunctionCall = async (data: FunctionCall) => {
@@ -444,8 +465,14 @@ const HomePage: React.FC = React.memo(() => {
     return setIsFinishRenderMessage(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!isFinishRenderMessage) {
+      stopStream();
+      abortController?.abort();
+      return;
+    }
+
     if (inputValue.trim()) {
       try {
         const size = messages.size;
@@ -487,8 +514,12 @@ const HomePage: React.FC = React.memo(() => {
           handleSetAutoRoomName(input);
         }
 
+        const abort = new AbortController();
+        setAbortController(abort);
+
         const res = await fetch(`https://api.aigptku.id/v1/generative`, {
           method: "POST",
+          signal: abort.signal,
           headers: {
             Accept: "text/event-stream",
             "Content-Type": "application/json",
@@ -513,6 +544,7 @@ const HomePage: React.FC = React.memo(() => {
         setIsFinishRenderMessage(false);
 
         const reader = res.body?.getReader();
+        setReader(reader);
         const decoder = new TextDecoder("utf-8");
 
         let receivedText = "";
@@ -572,14 +604,19 @@ const HomePage: React.FC = React.memo(() => {
           }
         } finally {
           // Ensure the reader is closed when the loop exits
-          reader?.cancel();
-        }
-        if (!isFunctionCall) {
+          // reader?.cancel();
           setIsFinishRenderMessage(true);
         }
       } catch (error) {
         console.error("Error processing stream:", error);
       }
+    }
+  };
+
+  const stopStream = () => {
+    if (reader) {
+      reader.releaseLock();
+      setReader(undefined);
     }
   };
 
@@ -621,6 +658,14 @@ const HomePage: React.FC = React.memo(() => {
     addToStore("rooms", newData);
   };
 
+  const handleAttachChange = (e: any) => {
+    setFile({
+      data: e.target.files[0],
+      url: URL.createObjectURL(e.target.files[0]),
+      name: e.target.files[0].name,
+    });
+  };
+
   useEffect(() => {
     if (window.innerWidth > 768) {
       setSidebarActive(true);
@@ -645,6 +690,13 @@ const HomePage: React.FC = React.memo(() => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    if (inputTextRef.current && inputTextRef.current.scrollHeight < 150) {
+      inputTextRef.current.style.height = "auto"; // Reset height to auto
+      inputTextRef.current.style.height = `${inputTextRef.current.scrollHeight}px`; // Set height to scrollHeight
+    }
+  }, [inputValue]);
 
   useEffect(() => {
     if (isFinishRenderMessage && inRenderedMessage.size > 0) {
@@ -819,7 +871,7 @@ const HomePage: React.FC = React.memo(() => {
     }
   }, [innerWidth]);
 
-  // console.log(isNotFound);
+  // console.log(file);
 
   return (
     <SidebarContainer
@@ -977,9 +1029,8 @@ const HomePage: React.FC = React.memo(() => {
             ))}
           </div>
           <form
-            onSubmit={handleSubmit}
             style={{
-              height: 70,
+              minHeight: 70,
               position: "fixed",
               bottom: 0,
               width:
@@ -987,44 +1038,125 @@ const HomePage: React.FC = React.memo(() => {
                   ? innerWidth - sidebarWidth
                   : "100vw",
               display: "flex",
+              flexDirection: "column",
               justifyContent: "center",
-              backgroundColor: "#10001b",
-              boxShadow: "0 -10px 6px rgba(24, 0, 40, 0.5)",
+              alignItems: "center",
+              // backgroundColor: "#10001b",
+              // boxShadow: "0 -10px 6px rgba(24, 0, 40, 0.5)",
             }}
           >
             <div
               style={{
                 position: "relative",
                 display: "flex",
-                flexDirection: "row",
+                flexDirection: "column",
                 justifyContent: "center",
                 width: "80%",
                 maxWidth: "800px",
+                marginBottom: 20,
+                borderRadius: 20,
+                paddingLeft: 50,
+                paddingRight: 50,
               }}
+              className="input"
             >
-              <input
+              {file && (
+                <div
+                  style={{
+                    width: "100%",
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 70,
+                      height: 70,
+                      cursor: "pointer",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      onClick={() => {
+                        setFile(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = "";
+                        }
+                      }}
+                      className="closefile"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        backgroundColor: "black",
+                        position: "absolute",
+                        right: -5,
+                        top: -5,
+                        borderRadius: 10,
+                      }}
+                    >
+                      <GrFormClose size={20} color="white" />
+                    </div>
+                    <img
+                      src={file.url}
+                      alt=""
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        borderRadius: 10,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <textarea
                 style={{
-                  height: 50,
+                  // minHeight: 50,
+                  // padding: "12px 50px",
                   width: "100%",
-                  paddingLeft: innerWidth < 768 ? "4%" : "2%",
-                  paddingRight: innerWidth < 768 ? "15%" : "8%",
-                  borderRadius: 20,
+
+                  backgroundColor: "transparent",
+                  outline: "none",
+                  color: "white",
                 }}
-                type="text"
+                ref={inputTextRef}
+                rows={1}
                 value={inputValue}
                 onChange={handleInputChange}
+                onKeyDown={handleInputSubmit}
                 className="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Tekan Enter untuk mengirim..."
+                placeholder="Tekan Cmd/Ctrl + Enter untuk mengirim..."
               />
+              <label
+                style={{
+                  left: 10,
+                  bottom: 10,
+                  position: "absolute",
+                  cursor: "pointer",
+                }}
+              >
+                <IoAttachSharp className="mdsend" size={30} />
+                <input
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  type="file"
+                  onChange={handleAttachChange}
+                  className={"fileInput"}
+                  accept="image/*"
+                />
+              </label>
               <button
                 style={{
-                  right: innerWidth < 768 ? "3%" : 10,
-                  top: 10,
+                  right: 10,
+                  bottom: 10,
                   position: "absolute",
                 }}
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
               >
-                <MdSend className="mdsend" size={30} />
+                {isFinishRenderMessage ? (
+                  <MdSend className="mdsend" size={30} />
+                ) : (
+                  <IoStopCircle className="mdsend" size={30} />
+                )}
               </button>
             </div>
           </form>

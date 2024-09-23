@@ -186,7 +186,8 @@ Sample CSS styles styles.css .chat-bubble {
   transition: ease-in 300ms;
 }
 
-input {
+input,
+.input {
   /* background-color: #ffd7f0; */
   background-image: linear-gradient(
     109.6deg,
@@ -197,33 +198,43 @@ input {
   transition: ease-out 300ms;
   border: solid 1px #39065a;
   outline: none;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 input:hover,
+:focus,
+textarea:hover,
 :focus {
   transition: ease-in 300ms;
 }
 
-input::-webkit-input-placeholder {
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
   color: #ffffffb2;
 }
 
-input::-moz-placeholder {
+input::-moz-placeholder,
+textarea::-moz-placeholder {
   color: #ffffffb2;
 }
 
-input::-ms-input-placeholder {
+input::-ms-input-placeholder,
+textarea::-ms-input-placeholder {
   color: #ffffffb2;
 }
 
-input::-webkit-input-placeholder {
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
   color: #ffffffb2;
 }
 
-input:-moz-placeholder {
+input:-moz-placeholder,
+textarea:-moz-placeholder {
   color: #ffffffb2;
 }
 
+textarea::placeholder,
 input::placeholder {
   color: #ffffffb2;
 }
@@ -252,4 +263,12 @@ input::placeholder {
 
 .btnthree:hover {
   color: #fff;
+}
+
+.closefile {
+  opacity: 0.5;
+}
+
+.closefile:hover {
+  opacity: 1;
 }
